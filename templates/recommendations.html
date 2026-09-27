@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Recommended Opportunities</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: #050816;
+        color: #ffffff;
+        min-height: 100vh;
+      }
+
+      .topbar {
+        background: #081020;
+        border-bottom: 1px solid #18354a;
+        padding: 18px 6%;
+      }
+
+      .logo {
+        color: #00e5ff;
+        font-size: 21px;
+        font-weight: bold;
+      }
+
+      .container {
+        width: 92%;
+        max-width: 1200px;
+        margin: 40px auto;
+      }
+
+      .heading {
+        text-align: center;
+        margin-bottom: 35px;
+      }
+
+      .heading h1 {
+        color: #00e5ff;
+        font-size: 34px;
+        margin-bottom: 10px;
+      }
+
+      .heading p {
+        color: #9aa8bd;
+        font-size: 15px;
+      }
+
+      .job {
+        background: #0c1428;
+        border: 1px solid #19364a;
+        border-radius: 15px;
+        padding: 24px;
+        margin-bottom: 20px;
+      }
+
+      .job:hover {
+        border-color: #00e5ff;
+      }
+
+      .job h2 {
+        color: #ffffff;
+        font-size: 22px;
+        margin-bottom: 15px;
+      }
+
+      .info {
+        color: #b9c4d5;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .info strong {
+        color: #00e5ff;
+      }
+
+      .match-box {
+        margin-top: 18px;
+        background: #111b31;
+        border: 1px solid #19364a;
+        border-radius: 10px;
+        padding: 16px;
+      }
+
+      .match-title {
+        color: #00ff9d;
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 12px;
+      }
+
+      .skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .skill {
+        background: #0b2633;
+        border: 1px solid #16566b;
+        color: #00e5ff;
+        padding: 7px 11px;
+        border-radius: 16px;
+        font-size: 12px;
+      }
+
+      .missing {
+        background: #2b2112;
+        border-color: #76531d;
+        color: #ffbd59;
+      }
+
+      .description {
+        color: #aeb9ca;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-top: 18px;
+      }
+
+      .apply {
+        display: inline-block;
+        margin-top: 18px;
+        padding: 10px 18px;
+        background: #00e5ff;
+        color: #031018;
+        text-decoration: none;
+        border-radius: 7px;
+        font-weight: bold;
+      }
+
+      .apply:hover {
+        opacity: 0.85;
+      }
+
+      .empty {
+        text-align: center;
+        color: #8794a8;
+        padding: 50px 20px;
+      }
+
+      .back {
+        display: inline-block;
+        margin-top: 20px;
+        color: #00e5ff;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="topbar">
+      <div class="logo">AI RESUME SCANNER</div>
+    </div>
+
+    <div class="container">
+      <div class="heading">
+        <h1>
+          {% if opportunity_type == "internship" %} Internship Recommendations
+          {% else %} Job Recommendations {% endif %}
+        </h1>
+
+        <p>Opportunities matched with your resume</p>
+      </div>
+
+      {% if recommendations %} {% for job in recommendations %}
+
+      <div class="job">
+        <h2>{{ job.title }}</h2>
+
+        <div class="info">
+          <strong>Company:</strong>
+          {{ job.company }}
+        </div>
+
+        <div class="info">
+          <strong>Location:</strong>
+          {{ job.location }}
+        </div>
+
+        <div class="info">
+          <strong>Salary / Stipend:</strong>
+          {{ job.salary }}
+        </div>
+
+        <div class="info">
+          <strong>Type:</strong>
+          {{ job.job_type }}
+        </div>
+
+        <div class="match-box">
+          <div class="match-title">Resume Match: {{ job.resume_match }}%</div>
+
+          {% if job.matched_skills %}
+
+          <div class="info">
+            <strong>Matched Skills:</strong>
+          </div>
+
+          <div class="skills">
+            {% for skill in job.matched_skills %}
+
+            <span class="skill"> {{ skill }} </span>
+
+            {% endfor %}
+          </div>
+
+          {% endif %} {% if job.missing_skills %}
+
+          <div class="info" style="margin-top: 14px">
+            <strong>Skills Not Found:</strong>
+          </div>
+
+          <div class="skills">
+            {% for skill in job.missing_skills %}
+
+            <span class="skill missing"> {{ skill }} </span>
+
+            {% endfor %}
+          </div>
+
+          {% endif %}
+        </div>
+
+        {% if job.description %}
+
+        <div class="description">{{ job.description }}</div>
+
+        {% endif %} {% if job.apply_url and job.apply_url != "#" %}
+
+        <a
+          class="apply"
+          href="{{ job.apply_url }}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Apply Now
+        </a>
+
+        {% endif %}
+      </div>
+
+      {% endfor %} {% else %}
+
+      <div class="job empty">
+        <h2>No opportunities found</h2>
+
+        <p>No matching opportunities were returned for this selection.</p>
+      </div>
+
+      {% endif %}
+
+      <div style="text-align: center">
+        <a href="{{ url_for('upload') }}" class="back">
+          Analyze Another Resume
+        </a>
+      </div>
+    </div>
+  </body>
+</html>

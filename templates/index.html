@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>AI Resume Scanner | Smart Career Intelligence</title>
+
+    <!-- Milo CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/milo.css') }}"
+    />
+
+    <!-- Main Website CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        overflow-x: hidden;
+
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+
+        color: #ffffff;
+
+        background:
+          radial-gradient(
+            circle at 15% 20%,
+            rgba(0, 238, 255, 0.13),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at 85% 25%,
+            rgba(130, 70, 255, 0.14),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at 50% 100%,
+            rgba(0, 170, 255, 0.08),
+            transparent 35%
+          ),
+          #030610;
+
+        animation: pageBackground 18s ease-in-out infinite;
+      }
+
+      @keyframes pageBackground {
+        0% {
+          background-position: 0% 0%;
+        }
+
+        50% {
+          background-position: 100% 50%;
+        }
+
+        100% {
+          background-position: 0% 0%;
+        }
+      }
+
+      /* =========================================
+       ANIMATED GRID
+       ========================================= */
+
+      body::before {
+        content: "";
+
+        position: fixed;
+
+        inset: 0;
+
+        pointer-events: none;
+
+        opacity: 0.12;
+
+        background-image:
+          linear-gradient(rgba(0, 234, 255, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 234, 255, 0.08) 1px, transparent 1px);
+
+        background-size: 55px 55px;
+
+        animation: gridMove 20s linear infinite;
+
+        z-index: 0;
+      }
+
+      @keyframes gridMove {
+        from {
+          transform: translateY(0);
+        }
+
+        to {
+          transform: translateY(55px);
+        }
+      }
+
+      /* =========================================
+       GLOWING ORB
+       ========================================= */
+
+      body::after {
+        content: "";
+
+        position: fixed;
+
+        width: 380px;
+        height: 380px;
+
+        left: -180px;
+        top: 35%;
+
+        border-radius: 50%;
+
+        background: rgba(0, 238, 255, 0.13);
+
+        filter: blur(90px);
+
+        pointer-events: none;
+
+        animation: orbMove 12s ease-in-out infinite;
+
+        z-index: 0;
+      }
+
+      @keyframes orbMove {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
+
+        50% {
+          transform: translate(220px, -80px);
+        }
+      }
+
+      /* =========================================
+       MAIN CONTAINER
+       ========================================= */
+
+      .container {
+        position: relative;
+
+        z-index: 2;
+
+        width: min(1180px, 92%);
+
+        margin: auto;
+
+        padding: 35px 0 80px;
+      }
+
+      /* =========================================
+       TOP BAR
+       ========================================= */
+
+      .top-bar {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        padding: 14px 20px;
+
+        margin-bottom: 45px;
+
+        border: 1px solid rgba(255, 255, 255, 0.08);
+
+        border-radius: 18px;
+
+        background: rgba(7, 13, 31, 0.88);
+
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.35);
+
+        animation: navAppear 0.8s ease both;
+      }
+
+      @keyframes navAppear {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* =========================================
+       BRAND
+       ========================================= */
+
+      .brand {
+        display: flex;
+
+        align-items: center;
+
+        gap: 12px;
+
+        font-weight: 800;
+
+        letter-spacing: 0.5px;
+      }
+
+      .brand-dot {
+        width: 11px;
+        height: 11px;
+
+        border-radius: 50%;
+
+        background: #00eaff;
+
+        box-shadow:
+          0 0 10px #00eaff,
+          0 0 25px #00eaff;
+
+        animation: dotPulse 1.8s ease-in-out infinite;
+      }
+
+      @keyframes dotPulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+
+        50% {
+          transform: scale(1.45);
+        }
+      }
+
+      .brand span {
+        color: #ffffff;
+      }
+
+      .brand strong {
+        color: #00eaff;
+      }
+
+      /* =========================================
+       SYSTEM STATUS
+       ========================================= */
+
+      .system-status {
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        padding: 8px 13px;
+
+        border-radius: 999px;
+
+        color: #bffaff;
+
+        background: rgba(0, 234, 255, 0.06);
+
+        border: 1px solid rgba(0, 234, 255, 0.15);
+
+        font-size: 0.78rem;
+      }
+
+      .status-light {
+        width: 7px;
+        height: 7px;
+
+        border-radius: 50%;
+
+        background: #00ff9d;
+
+        box-shadow: 0 0 8px #00ff9d;
+      }
+
+      /* =========================================
+       HERO
+       ========================================= */
+
+      .hero {
+        display: grid;
+
+        grid-template-columns:
+          minmax(0, 1.1fr)
+          minmax(350px, 0.9fr);
+
+        gap: 55px;
+
+        align-items: center;
+
+        min-height: 610px;
+      }
+
+      /* =========================================
+       HERO TEXT
+       ========================================= */
+
+      .hero-content {
+        animation: heroTextReveal 1s ease both;
+      }
+
+      @keyframes heroTextReveal {
+        from {
+          opacity: 0;
+          transform: translateX(-40px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .eyebrow {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        padding: 8px 14px;
+
+        margin-bottom: 22px;
+
+        border-radius: 999px;
+
+        color: #aef8ff;
+
+        background: rgba(0, 234, 255, 0.06);
+
+        border: 1px solid rgba(0, 234, 255, 0.18);
+
+        font-size: 0.78rem;
+
+        text-transform: uppercase;
+
+        letter-spacing: 1.5px;
+      }
+
+      .eyebrow::before {
+        content: "✦";
+
+        color: #00eaff;
+
+        animation: starRotate 3s linear infinite;
+      }
+
+      @keyframes starRotate {
+        from {
+          transform: rotate(0);
+        }
+
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* =========================================
+       MAIN HEADING
+       ========================================= */
+
+      .hero h1 {
+        margin: 0;
+
+        font-size: clamp(3rem, 6vw, 5.8rem);
+
+        line-height: 0.98;
+
+        letter-spacing: -3px;
+
+        font-weight: 900;
+      }
+
+      .gradient-text {
+        display: block;
+
+        background: linear-gradient(
+          100deg,
+          #ffffff 10%,
+          #00eaff 48%,
+          #9d6cff 85%
+        );
+
+        background-size: 200%;
+
+        background-clip: text;
+
+        -webkit-background-clip: text;
+
+        color: transparent;
+
+        -webkit-text-fill-color: transparent;
+
+        animation: gradientFlow 5s ease infinite;
+      }
+
+      @keyframes gradientFlow {
+        0% {
+          background-position: 0%;
+        }
+
+        50% {
+          background-position: 100%;
+        }
+
+        100% {
+          background-position: 0%;
+        }
+      }
+
+      /* =========================================
+       DESCRIPTION
+       ========================================= */
+
+      .hero-description {
+        max-width: 650px;
+
+        margin: 28px 0 32px;
+
+        color: #9ba9c7;
+
+        font-size: 1.08rem;
+
+        line-height: 1.8;
+      }
+
+      /* =========================================
+       START BUTTON
+       ========================================= */
+
+      .start-link {
+        text-decoration: none;
+      }
+
+      .start-btn {
+        position: relative;
+
+        overflow: hidden;
+
+        border: none;
+
+        padding: 17px 30px;
+
+        border-radius: 14px;
+
+        cursor: pointer;
+
+        color: #001016;
+
+        background: linear-gradient(100deg, #00eaff, #6df6ff, #9d72ff);
+
+        font-size: 1rem;
+
+        font-weight: 800;
+
+        box-shadow: 0 10px 35px rgba(0, 234, 255, 0.18);
+
+        transition:
+          transform 0.3s ease,
+          box-shadow 0.3s ease;
+      }
+
+      .start-btn::before {
+        content: "";
+
+        position: absolute;
+
+        top: 0;
+        left: -120%;
+
+        width: 80%;
+        height: 100%;
+
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.55),
+          transparent
+        );
+
+        transform: skewX(-20deg);
+
+        transition: left 0.6s ease;
+      }
+
+      .start-btn:hover {
+        transform: translateY(-4px) scale(1.02);
+
+        box-shadow: 0 18px 45px rgba(0, 234, 255, 0.3);
+      }
+
+      .start-btn:hover::before {
+        left: 130%;
+      }
+
+      .start-btn:active {
+        transform: translateY(0) scale(0.98);
+      }
+
+      /* =========================================
+       HERO IMAGE
+       ========================================= */
+
+      .hero-visual {
+        position: relative;
+
+        display: flex;
+
+        justify-content: center;
+
+        align-items: center;
+
+        min-height: 480px;
+
+        animation: visualReveal 1.1s ease 0.15s both;
+      }
+
+      @keyframes visualReveal {
+        from {
+          opacity: 0;
+
+          transform: translateX(40px) scale(0.94);
+        }
+
+        to {
+          opacity: 1;
+
+          transform: translateX(0) scale(1);
+        }
+      }
+
+      .hero-image-frame {
+        position: relative;
+
+        width: 100%;
+
+        max-width: 520px;
+
+        padding: 14px;
+
+        border-radius: 28px;
+
+        background: linear-gradient(
+          135deg,
+          rgba(0, 234, 255, 0.18),
+          rgba(150, 90, 255, 0.15)
+        );
+
+        border: 1px solid rgba(255, 255, 255, 0.1);
+
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+
+        animation: frameFloat 6s ease-in-out infinite;
+      }
+
+      @keyframes frameFloat {
+        0%,
+        100% {
+          transform: translateY(0) rotate(0deg);
+        }
+
+        50% {
+          transform: translateY(-12px) rotate(0.5deg);
+        }
+      }
+
+      .hero-image {
+        display: block;
+
+        width: 100%;
+
+        height: auto;
+
+        max-height: 440px;
+
+        object-fit: contain;
+
+        object-position: center;
+
+        border-radius: 18px;
+      }
+
+      /* =========================================
+       FLOATING BADGES
+       ========================================= */
+
+      .floating-badge {
+        position: absolute;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 9px;
+
+        padding: 12px 15px;
+
+        border-radius: 14px;
+
+        background: rgba(7, 13, 31, 0.95);
+
+        border: 1px solid rgba(0, 234, 255, 0.18);
+
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+
+        color: #d9fbff;
+
+        font-size: 0.78rem;
+
+        font-weight: 700;
+      }
+
+      .badge-one {
+        left: -25px;
+        top: 80px;
+
+        animation: badgeFloat 4s ease-in-out infinite;
+      }
+
+      .badge-two {
+        right: -25px;
+        bottom: 85px;
+
+        animation: badgeFloat 4.5s ease-in-out 1s infinite;
+      }
+
+      .badge-icon {
+        display: grid;
+
+        place-items: center;
+
+        width: 28px;
+        height: 28px;
+
+        border-radius: 9px;
+
+        color: #001016;
+
+        background: #00eaff;
+      }
+
+      @keyframes badgeFloat {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      /* =========================================
+       FEATURE CARDS
+       ========================================= */
+
+      .feature-strip {
+        display: grid;
+
+        grid-template-columns: repeat(3, 1fr);
+
+        gap: 16px;
+
+        margin-top: 60px;
+      }
+
+      .feature {
+        position: relative;
+
+        padding: 23px;
+
+        border-radius: 20px;
+
+        background: rgba(8, 15, 35, 0.88);
+
+        border: 1px solid rgba(255, 255, 255, 0.07);
+
+        overflow: hidden;
+
+        transition:
+          transform 0.35s ease,
+          border-color 0.35s ease,
+          box-shadow 0.35s ease;
+      }
+
+      .feature::after {
+        content: "";
+
+        position: absolute;
+
+        width: 120px;
+        height: 120px;
+
+        right: -60px;
+        bottom: -60px;
+
+        border-radius: 50%;
+
+        background: rgba(0, 234, 255, 0.08);
+      }
+
+      .feature:hover {
+        transform: translateY(-7px);
+
+        border-color: rgba(0, 234, 255, 0.2);
+
+        box-shadow: 0 18px 45px rgba(0, 234, 255, 0.07);
+      }
+
+      .feature-number {
+        color: #00eaff;
+
+        font-size: 0.75rem;
+
+        font-weight: 800;
+
+        letter-spacing: 2px;
+      }
+
+      .feature h3 {
+        margin: 10px 0 8px;
+
+        font-size: 1.05rem;
+      }
+
+      .feature p {
+        margin: 0;
+
+        color: #7f8da9;
+
+        font-size: 0.86rem;
+
+        line-height: 1.6;
+      }
+
+      /* =========================================
+       FOOTER
+       ========================================= */
+
+      .footer {
+        margin-top: 65px;
+
+        text-align: center;
+
+        color: #52617d;
+
+        font-size: 0.78rem;
+      }
+
+      /* =========================================
+       TABLET
+       ========================================= */
+
+      @media (max-width: 900px) {
+        .hero {
+          grid-template-columns: 1fr;
+
+          text-align: center;
+
+          gap: 30px;
+        }
+
+        .hero-description {
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .hero-visual {
+          min-height: 0;
+        }
+
+        .badge-one {
+          left: 2%;
+        }
+
+        .badge-two {
+          right: 2%;
+        }
+      }
+
+      /* =========================================
+       MOBILE
+       ========================================= */
+
+      @media (max-width: 650px) {
+        .container {
+          width: 94%;
+
+          padding-top: 18px;
+        }
+
+        .top-bar {
+          margin-bottom: 30px;
+        }
+
+        .system-status {
+          display: none;
+        }
+
+        .hero h1 {
+          font-size: 3.2rem;
+
+          letter-spacing: -2px;
+        }
+
+        .hero-description {
+          font-size: 0.95rem;
+        }
+
+        .feature-strip {
+          grid-template-columns: 1fr;
+        }
+
+        .floating-badge {
+          display: none;
+        }
+
+        .hero-image-frame {
+          padding: 8px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- =========================================
+       MILO
+       ========================================= -->
+
+    {% include "milo.html" %}
+
+    <main class="container">
+      <!-- =======================================
+         TOP BAR
+         ======================================= -->
+
+      <header class="top-bar">
+        <div class="brand">
+          <div class="brand-dot"></div>
+
+          <span>
+            AI
+            <strong>RESUME</strong>
+            SCANNER
+          </span>
+        </div>
+
+        <div class="system-status">
+          <span class="status-light"></span>
+
+          AI ENGINE ONLINE
+        </div>
+      </header>
+
+      <!-- =======================================
+         HERO
+         ======================================= -->
+
+      <section class="hero">
+        <!-- HERO TEXT -->
+
+        <div class="hero-content">
+          <div class="eyebrow">Intelligent Career Analysis</div>
+
+          <h1>
+            Your Resume.
+
+            <span class="gradient-text"> Smarter. </span>
+          </h1>
+
+          <p class="hero-description">
+            Transform your resume into actionable career intelligence. Discover
+            your skills, identify suitable roles, measure ATS compatibility and
+            explore opportunities designed around your profile.
+          </p>
+
+          <a href="{{ url_for('upload') }}" class="start-link">
+            <button type="button" class="start-btn">
+              Analyze My Resume &nbsp; →
+            </button>
+          </a>
+        </div>
+
+        <!-- HERO VISUAL -->
+
+        <div class="hero-visual">
+          <div class="hero-image-frame">
+            <img
+              src="{{ url_for('static', filename='images/hero-banner.jpg') }}"
+              alt="AI Resume Scanner"
+              class="hero-image"
+            />
+          </div>
+
+          <div class="floating-badge badge-one">
+            <span class="badge-icon"> ✦ </span>
+
+            AI Analysis
+          </div>
+
+          <div class="floating-badge badge-two">
+            <span class="badge-icon"> ✓ </span>
+
+            Smart Matching
+          </div>
+        </div>
+      </section>
+
+      <!-- =======================================
+         FEATURES
+         ======================================= -->
+
+      <section class="feature-strip">
+        <article class="feature">
+          <div class="feature-number">01</div>
+
+          <h3>Resume Intelligence</h3>
+
+          <p>
+            Extract meaningful skills and information from your resume
+            automatically.
+          </p>
+        </article>
+
+        <article class="feature">
+          <div class="feature-number">02</div>
+
+          <h3>ATS Compatibility</h3>
+
+          <p>
+            Understand how your resume performs against automated screening
+            systems.
+          </p>
+        </article>
+
+        <article class="feature">
+          <div class="feature-number">03</div>
+
+          <h3>Career Direction</h3>
+
+          <p>
+            Discover suitable roles based on the profile extracted from your
+            resume.
+          </p>
+        </article>
+      </section>
+
+      <!-- =======================================
+         FOOTER
+         ======================================= -->
+
+      <footer class="footer">AI-powered resume intelligence platform</footer>
+    </main>
+
+    <!-- =========================================
+       MILO JAVASCRIPT
+       ========================================= -->
+
+    <script src="{{ url_for('static', filename='js/milo.js') }}"></script>
+  </body>
+</html>

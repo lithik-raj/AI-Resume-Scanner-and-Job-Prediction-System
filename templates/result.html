@@ -1,0 +1,1175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>AI Resume Scanner - Results</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: #050816;
+        color: #ffffff;
+        min-height: 100vh;
+      }
+
+      .topbar {
+        background: #081020;
+        border-bottom: 1px solid #18354a;
+        padding: 18px 6%;
+      }
+
+      .logo {
+        color: #00e5ff;
+        font-size: 21px;
+        font-weight: bold;
+      }
+
+      .container {
+        width: 92%;
+        max-width: 1200px;
+        margin: 40px auto;
+      }
+
+      .heading {
+        text-align: center;
+        margin-bottom: 35px;
+      }
+
+      .heading h1 {
+        color: #00e5ff;
+        font-size: 36px;
+        margin-bottom: 8px;
+      }
+
+      .heading p {
+        color: #9aa8bd;
+        font-size: 15px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .card {
+        background: #0c1428;
+        border: 1px solid #19364a;
+        border-radius: 15px;
+        padding: 24px;
+      }
+
+      .full {
+        grid-column: 1 / -1;
+      }
+
+      .card h2 {
+        color: #00e5ff;
+        font-size: 20px;
+        margin-bottom: 18px;
+      }
+
+      .score {
+        color: #00ff9d;
+        font-size: 48px;
+        font-weight: bold;
+      }
+
+      .role {
+        color: #ffffff;
+        font-size: 28px;
+        font-weight: bold;
+      }
+
+      .confidence {
+        color: #00ff9d;
+        margin-top: 8px;
+      }
+
+      .skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .skill {
+        display: inline-block;
+        background: #0b2633;
+        border: 1px solid #16566b;
+        color: #00e5ff;
+        padding: 8px 12px;
+        border-radius: 18px;
+        font-size: 13px;
+      }
+
+      .evidence-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .evidence {
+        background: #111b31;
+        border-left: 3px solid #00e5ff;
+        padding: 12px;
+        border-radius: 7px;
+        color: #d8dfeb;
+      }
+
+      .missing {
+        border-left-color: #ffb84d;
+      }
+
+      .empty {
+        color: #8794a8;
+      }
+
+      .metric {
+        margin-bottom: 18px;
+      }
+
+      .metric-title {
+        color: #dce4ef;
+        font-size: 14px;
+        margin-bottom: 7px;
+      }
+
+      .metric-value {
+        color: #00e5ff;
+        font-weight: bold;
+      }
+
+      .table-box {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .role-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .role-table th,
+      .role-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #1b2b42;
+      }
+
+      .role-table th {
+        color: #00e5ff;
+      }
+
+      .role-table td {
+        color: #d8dfeb;
+      }
+
+      .main-role {
+        color: #00ff9d !important;
+        font-weight: bold;
+      }
+
+      .url-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .url-item {
+        background: #111b31;
+        border: 1px solid #19364a;
+        padding: 13px;
+        border-radius: 8px;
+      }
+
+      .url-type {
+        display: block;
+        color: #7f8ca0;
+        font-size: 11px;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+      }
+
+      .url-item a {
+        color: #00e5ff;
+        text-decoration: none;
+        overflow-wrap: anywhere;
+      }
+
+      .job {
+        background: #111b31;
+        border: 1px solid #19364a;
+        border-radius: 10px;
+        padding: 18px;
+        margin-bottom: 14px;
+      }
+
+      .job h3 {
+        color: #ffffff;
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      .job p {
+        color: #aeb9ca;
+        font-size: 14px;
+        margin-bottom: 7px;
+      }
+
+      /* =====================================================
+         COMPANY LOGO
+         ===================================================== */
+
+      .job-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      .company-logo {
+        width: 58px;
+        height: 58px;
+        min-width: 58px;
+        border-radius: 12px;
+        background: #07101f;
+        border: 1px solid #19364a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        box-shadow: 0 0 12px rgba(0, 229, 255, 0.08);
+      }
+
+      .company-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 7px;
+        display: block;
+      }
+
+      .company-logo-fallback {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0b2633;
+        color: #00e5ff;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .job-title-area {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .job-title-area h3 {
+        margin-bottom: 5px;
+      }
+
+      .job-company {
+        color: #00e5ff;
+        font-size: 13px;
+        font-weight: bold;
+      }
+
+      /* =====================================================
+         RESUME MATCH + PLACEMENT CHANCE
+         ===================================================== */
+
+      .job-match-box {
+        margin: 15px 0;
+        padding: 15px;
+        background: #0b1629;
+        border: 1px solid #19364a;
+        border-radius: 10px;
+      }
+
+      .job-match-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .job-match-label {
+        color: #aeb9ca;
+        font-size: 13px;
+      }
+
+      .job-match-value {
+        color: #00ff9d;
+        font-weight: bold;
+        font-size: 17px;
+      }
+
+      .match-bar {
+        width: 100%;
+        height: 8px;
+        background: #17243a;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 14px;
+      }
+
+      .match-fill {
+        height: 100%;
+        background: #00e5ff;
+        border-radius: 10px;
+      }
+
+      .chance-low {
+        color: #ff6b6b;
+      }
+
+      .chance-medium {
+        color: #ffb84d;
+      }
+
+      .chance-good {
+        color: #00e5ff;
+      }
+
+      .chance-high {
+        color: #00ff9d;
+      }
+
+      .matched-skills-box {
+        margin-top: 10px;
+      }
+
+      .matched-title {
+        color: #9aa8bd;
+        font-size: 12px;
+        margin-bottom: 7px;
+      }
+
+      .matched-skill {
+        display: inline-block;
+        padding: 5px 9px;
+        margin: 3px;
+        border-radius: 12px;
+        background: #0b2633;
+        border: 1px solid #16566b;
+        color: #00e5ff;
+        font-size: 11px;
+      }
+
+      .missing-skill {
+        display: inline-block;
+        padding: 5px 9px;
+        margin: 3px;
+        border-radius: 12px;
+        background: #30251a;
+        border: 1px solid #6b4b20;
+        color: #ffb84d;
+        font-size: 11px;
+      }
+
+      .apply {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 9px 16px;
+        background: #00e5ff;
+        color: #031018;
+        text-decoration: none;
+        border-radius: 7px;
+        font-weight: bold;
+      }
+
+      .footer {
+        text-align: center;
+        color: #647287;
+        font-size: 12px;
+        margin-top: 30px;
+        padding-bottom: 30px;
+      }
+
+      .action-area {
+        text-align: center;
+        margin-top: 35px;
+      }
+
+      .analyze-again {
+        display: inline-block;
+        padding: 14px 28px;
+        background: #00e5ff;
+        color: #031018;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+      }
+
+      .analyze-again:hover {
+        opacity: 0.85;
+      }
+
+      /* =====================================================
+         MILO
+         ===================================================== */
+
+      .milo-box {
+        width: 100%;
+        margin-top: 30px;
+        background: #0c1428;
+        border: 1px solid #19364a;
+        border-radius: 15px;
+        padding: 24px;
+      }
+
+      .milo-title {
+        color: #00e5ff;
+        font-size: 20px;
+        margin-bottom: 6px;
+      }
+
+      .milo-subtitle {
+        color: #8794a8;
+        font-size: 13px;
+        margin-bottom: 18px;
+      }
+
+      .milo-messages {
+        height: 280px;
+        overflow-y: auto;
+        background: #07101f;
+        border: 1px solid #19364a;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+
+      .milo-message {
+        max-width: 85%;
+        padding: 11px 14px;
+        margin-bottom: 10px;
+        border-radius: 9px;
+        line-height: 1.5;
+        font-size: 14px;
+      }
+
+      .milo-bot {
+        background: #111b31;
+        border-left: 3px solid #00e5ff;
+        color: #d8dfeb;
+      }
+
+      .milo-user {
+        background: #0b2633;
+        border-right: 3px solid #00ff9d;
+        color: #ffffff;
+        margin-left: auto;
+      }
+
+      .milo-input-area {
+        display: flex;
+        gap: 10px;
+      }
+
+      .milo-input {
+        flex: 1;
+        padding: 13px;
+        border-radius: 8px;
+        border: 1px solid #19364a;
+        background: #07101f;
+        color: #ffffff;
+        outline: none;
+      }
+
+      .milo-input:focus {
+        border-color: #00e5ff;
+      }
+
+      .milo-send {
+        padding: 13px 20px;
+        border: none;
+        border-radius: 8px;
+        background: #00e5ff;
+        color: #031018;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .milo-send:hover {
+        opacity: 0.85;
+      }
+
+      .milo-loading {
+        color: #00e5ff;
+        font-size: 13px;
+        margin-bottom: 10px;
+        display: none;
+      }
+
+      @media (max-width: 750px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .full {
+          grid-column: auto;
+        }
+
+        .heading h1 {
+          font-size: 28px;
+        }
+
+        .container {
+          width: 94%;
+        }
+
+        .milo-input-area {
+          flex-direction: column;
+        }
+
+        .milo-send {
+          width: 100%;
+        }
+
+        .job-header {
+          align-items: flex-start;
+        }
+
+        .company-logo {
+          width: 50px;
+          height: 50px;
+          min-width: 50px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="topbar">
+      <div class="logo">AI RESUME SCANNER</div>
+    </div>
+
+    <div class="container">
+      <div class="heading">
+        <h1>Resume Analysis Results</h1>
+        <p>AI-powered analysis of your resume</p>
+      </div>
+
+      <div class="grid">
+        <!-- ATS SCORE -->
+
+        <div class="card">
+          <h2>ATS Score</h2>
+          <div class="score">{{ ats_score }}%</div>
+        </div>
+
+        <!-- PREDICTED ROLE -->
+
+        <div class="card">
+          <h2>Predicted Role</h2>
+
+          <div class="role">{{ prediction }}</div>
+
+          {% if prediction_result %} {% if prediction_result.confidence is
+          defined %}
+
+          <div class="confidence">
+            Confidence: {{ prediction_result.confidence }}%
+          </div>
+
+          {% endif %} {% endif %}
+        </div>
+
+        <!-- SKILLS -->
+
+        <div class="card">
+          <h2>Detected Skills</h2>
+
+          {% if skills %}
+
+          <div class="skills">
+            {% for skill in skills %}
+            <span class="skill">{{ skill }}</span>
+            {% endfor %}
+          </div>
+
+          {% else %}
+
+          <p class="empty">No technical skills detected.</p>
+
+          {% endif %}
+        </div>
+
+        <!-- MATCHING STRATEGY -->
+
+        <div class="card">
+          <h2>Matching Strategy</h2>
+
+          {% if prediction_result %}
+
+          <div class="evidence-list">
+            {% if prediction_result.role %}
+
+            <div class="evidence">
+              <strong>Predicted Role:</strong>
+              {{ prediction_result.role }}
+            </div>
+
+            {% endif %} {% if prediction_result.matched_evidence %}
+
+            <div class="evidence">
+              <strong>Resume Evidence:</strong>
+              {{ prediction_result.matched_evidence | join(", ") }}
+            </div>
+
+            {% endif %} {% if prediction_result.ml_prediction %}
+
+            <div class="evidence">
+              <strong>ML Prediction:</strong>
+              {{ prediction_result.ml_prediction }}
+            </div>
+
+            {% endif %}
+          </div>
+
+          {% else %}
+
+          <p class="empty">Matching information unavailable.</p>
+
+          {% endif %}
+        </div>
+
+        <!-- ATS ANALYSIS -->
+
+        <div class="card full">
+          <h2>ATS Analysis</h2>
+
+          {% if ats_details and ats_details.breakdown %} {% set breakdown =
+          ats_details.breakdown %}
+
+          <div class="metric">
+            <div class="metric-title">
+              Technical Skills:
+              <span class="metric-value">
+                {{ breakdown.technical_skills }}%
+              </span>
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-title">
+              Important Keywords:
+              <span class="metric-value">
+                {{ breakdown.important_keywords }}%
+              </span>
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-title">
+              Projects:
+              <span class="metric-value"> {{ breakdown.projects }}% </span>
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-title">
+              Education:
+              <span class="metric-value"> {{ breakdown.education }}% </span>
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-title">
+              Experience:
+              <span class="metric-value"> {{ breakdown.experience }}% </span>
+            </div>
+          </div>
+
+          {% else %}
+
+          <p class="empty">ATS breakdown unavailable.</p>
+
+          {% endif %}
+        </div>
+
+        <!-- ROLE COMPARISON -->
+
+        {% if prediction_result and prediction_result.role_scores %}
+
+        <div class="card full">
+          <h2>Role Comparison</h2>
+
+          <div class="table-box">
+            <table class="role-table">
+              <thead>
+                <tr>
+                  <th>Role</th>
+                  <th>Evidence Score</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for role, score in prediction_result.role_scores.items() %}
+
+                <tr>
+                  <td class="{% if role == prediction %}main-role{% endif %}">
+                    {{ role }}
+                  </td>
+
+                  <td>{{ score }}</td>
+                </tr>
+
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {% endif %}
+
+        <!-- WHY THIS ROLE -->
+
+        <div class="card">
+          <h2>Why This Role?</h2>
+
+          {% if prediction_result and prediction_result.strengths %}
+
+          <div class="evidence-list">
+            {% for item in prediction_result.strengths %}
+
+            <div class="evidence">{{ item }}</div>
+
+            {% endfor %}
+          </div>
+
+          {% else %}
+
+          <p class="empty">No additional strengths detected.</p>
+
+          {% endif %}
+        </div>
+
+        <!-- MISSING EVIDENCE -->
+
+        <div class="card">
+          <h2>Missing Evidence</h2>
+
+          {% if prediction_result and prediction_result.missing_evidence %}
+
+          <div class="evidence-list">
+            {% for item in prediction_result.missing_evidence %}
+
+            <div class="evidence missing">{{ item }}</div>
+
+            {% endfor %}
+          </div>
+
+          {% else %}
+
+          <p class="empty">No major missing evidence detected.</p>
+
+          {% endif %}
+        </div>
+
+        <!-- RESUME LINKS -->
+
+        {% if detected_urls %}
+
+        <div class="card full">
+          <h2>Resume Links</h2>
+
+          <div class="url-list">
+            {% for item in detected_urls %}
+
+            <div class="url-item">
+              <span class="url-type"> {{ item.type }} </span>
+
+              <a
+                href="{{ item.url }}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {{ item.url }}
+              </a>
+            </div>
+
+            {% endfor %}
+          </div>
+        </div>
+
+        {% endif %}
+
+        <!-- PROJECT EVIDENCE -->
+
+        {% if prediction_result and prediction_result.github_project_proof %}
+
+        <div class="card full">
+          <h2>Project Evidence</h2>
+
+          <div class="evidence-list">
+            {% for item in prediction_result.github_project_proof %}
+
+            <div class="evidence">{{ item }}</div>
+
+            {% endfor %}
+          </div>
+        </div>
+
+        {% endif %}
+
+        <!-- ALTERNATIVE ROLES -->
+
+        {% if prediction_result and prediction_result.alternatives %}
+
+        <div class="card full">
+          <h2>Alternative Roles</h2>
+
+          <div class="evidence-list">
+            {% for item in prediction_result.alternatives %}
+
+            <div class="evidence">
+              <strong>{{ item.role }}</strong>
+
+              <br />
+
+              Evidence Score: {{ item.score }}
+            </div>
+
+            {% endfor %}
+          </div>
+        </div>
+
+        {% endif %}
+
+        <!-- =================================================
+             CURRENT JOB RECOMMENDATIONS
+             ================================================= -->
+
+        <div class="card full">
+          <h2>Current Job Recommendations</h2>
+
+          {% if recommendations %} {% for job in recommendations %}
+
+          <div class="job">
+            <!-- COMPANY LOGO + JOB TITLE -->
+
+            <div class="job-header">
+              <div class="company-logo">
+                {% if job.logo %}
+
+                <img
+                  src="{{ job.logo }}"
+                  alt="{{ job.company }} logo"
+                  onerror="
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                  "
+                />
+
+                <span class="company-logo-fallback" style="display: none">
+                  {{ job.company[:2] | upper }}
+                </span>
+
+                {% else %}
+
+                <span class="company-logo-fallback">
+                  {{ job.company[:2] | upper }}
+                </span>
+
+                {% endif %}
+              </div>
+
+              <div class="job-title-area">
+                <h3>{{ job.title }}</h3>
+
+                <div class="job-company">{{ job.company }}</div>
+              </div>
+            </div>
+
+            <p>
+              <strong>Location:</strong>
+              {{ job.location }}
+            </p>
+
+            <p>
+              <strong>Salary:</strong>
+              {{ job.salary }}
+            </p>
+
+            <p>
+              <strong>Job Type:</strong>
+              {{ job.job_type }}
+            </p>
+
+            <!-- =========================================
+                 RESUME MATCH + CHANCE
+                 ========================================= -->
+
+            <div class="job-match-box">
+              <div class="job-match-row">
+                <span class="job-match-label"> Resume Match </span>
+
+                <span class="job-match-value">
+                  {{ job.resume_match | default(0) }}%
+                </span>
+              </div>
+
+              <div class="match-bar">
+                <div
+                  class="match-fill"
+                  data-match="{{ job.resume_match | default(0) }}"
+                ></div>
+              </div>
+
+              {% set match_score = job.resume_match | default(0) | float %} {%
+              if match_score >= 80 %} {% set chance_text = "High" %} {% set
+              chance_class = "chance-high" %} {% elif match_score >= 60 %} {%
+              set chance_text = "Good" %} {% set chance_class = "chance-good" %}
+              {% elif match_score >= 40 %} {% set chance_text = "Moderate" %} {%
+              set chance_class = "chance-medium" %} {% else %} {% set
+              chance_text = "Low" %} {% set chance_class = "chance-low" %} {%
+              endif %}
+
+              <div class="job-match-row">
+                <span class="job-match-label">
+                  Chance of Securing This Opportunity
+                </span>
+
+                <span class="job-match-value {{ chance_class }}">
+                  {{ chance_text }}
+                </span>
+              </div>
+
+              {% if job.matched_skills %}
+
+              <div class="matched-skills-box">
+                <div class="matched-title">Matched Skills</div>
+
+                {% for skill in job.matched_skills %}
+
+                <span class="matched-skill"> {{ skill }} </span>
+
+                {% endfor %}
+              </div>
+
+              {% endif %} {% if job.missing_skills %}
+
+              <div class="matched-skills-box">
+                <div class="matched-title">Skills to Improve</div>
+
+                {% for skill in job.missing_skills %}
+
+                <span class="missing-skill"> {{ skill }} </span>
+
+                {% endfor %}
+              </div>
+
+              {% endif %}
+            </div>
+
+            {% if job.description %}
+
+            <p>{{ job.description }}</p>
+
+            {% endif %} {% if job.apply_url and job.apply_url != "#" %}
+
+            <a
+              class="apply"
+              href="{{ job.apply_url }}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Apply Now
+            </a>
+
+            {% endif %}
+          </div>
+
+          {% endfor %} {% else %}
+
+          <p class="empty">No current job recommendations found.</p>
+
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- =================================================
+           MILO CHATBOT
+           ================================================= -->
+
+      <div class="milo-box">
+        <h2 class="milo-title">🤖 Milo — Job & Internship Assistant</h2>
+
+        <p class="milo-subtitle">
+          Ask Milo about jobs, internships, companies, skills, salary,
+          applications, or your resume match.
+        </p>
+
+        <div id="miloMessages" class="milo-messages">
+          <div class="milo-message milo-bot">
+            Hi! I'm Milo. Ask me about your recommended jobs, internships,
+            companies, skills, salary, applications, or resume match.
+          </div>
+        </div>
+
+        <div id="miloLoading" class="milo-loading">
+          Milo is checking your analysis...
+        </div>
+
+        <div class="milo-input-area">
+          <input
+            type="text"
+            id="miloInput"
+            class="milo-input"
+            placeholder="Ask about a job or internship..."
+            autocomplete="off"
+          />
+
+          <button type="button" class="milo-send" onclick="sendMiloMessage()">
+            Ask Milo
+          </button>
+        </div>
+      </div>
+
+      <!-- ANALYZE AGAIN -->
+
+      <div class="action-area">
+        <a href="{{ url_for('upload') }}" class="analyze-again">
+          Analyze Another Resume
+        </a>
+      </div>
+
+      <div class="footer">AI Resume Scanner</div>
+    </div>
+
+    <!-- =====================================================
+         MILO DATA + JAVASCRIPT
+         ===================================================== -->
+
+    <script id="milo-data" type="application/json">
+      {
+        "recommendations": {{ recommendations | default([]) | tojson }},
+        "prediction": {{ prediction_result | default({}) | tojson }},
+        "skills": {{ skills | default([]) | tojson }},
+        "ats_score": {{ ats_score | default(0) | tojson }}
+      }
+    </script>
+
+    <script>
+      const miloDataElement = document.getElementById("milo-data");
+
+      const miloData = JSON.parse(miloDataElement.textContent);
+
+      const miloRecommendations = miloData.recommendations || [];
+
+      const miloPrediction = miloData.prediction || {};
+
+      const miloSkills = miloData.skills || [];
+
+      const miloATSScore = miloData.ats_score || 0;
+
+      async function sendMiloMessage() {
+        const input = document.getElementById("miloInput");
+
+        const messages = document.getElementById("miloMessages");
+
+        const loading = document.getElementById("miloLoading");
+
+        const message = input.value.trim();
+
+        if (!message) {
+          return;
+        }
+
+        const userMessage = document.createElement("div");
+
+        userMessage.className = "milo-message milo-user";
+
+        userMessage.textContent = message;
+
+        messages.appendChild(userMessage);
+
+        input.value = "";
+
+        messages.scrollTop = messages.scrollHeight;
+
+        loading.style.display = "block";
+
+        const formData = new FormData();
+
+        formData.append("message", message);
+
+        formData.append("ats_score", String(miloATSScore));
+
+        formData.append("skills_data", JSON.stringify(miloSkills));
+
+        formData.append("prediction_data", JSON.stringify(miloPrediction));
+
+        formData.append(
+          "recommendations_data",
+          JSON.stringify(miloRecommendations),
+        );
+
+        try {
+          const response = await fetch("{{ url_for('milo') }}", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error("Milo server returned an error.");
+          }
+
+          const data = await response.json();
+
+          const botMessage = document.createElement("div");
+
+          botMessage.className = "milo-message milo-bot";
+
+          if (data.success) {
+            botMessage.textContent = data.response;
+          } else {
+            botMessage.textContent =
+              data.response || "Milo could not process your question.";
+          }
+
+          messages.appendChild(botMessage);
+        } catch (error) {
+          console.error("Milo error:", error);
+
+          const errorMessage = document.createElement("div");
+
+          errorMessage.className = "milo-message milo-bot";
+
+          errorMessage.textContent =
+            "Milo could not connect to the analysis service.";
+
+          messages.appendChild(errorMessage);
+        }
+
+        loading.style.display = "none";
+
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      document
+        .getElementById("miloInput")
+        .addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            event.preventDefault();
+
+            sendMiloMessage();
+          }
+        });
+    </script>
+  </body>
+</html>

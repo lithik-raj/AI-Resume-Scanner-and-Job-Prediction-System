@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Upload Resume - AI Resume Scanner</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+
+    <style>
+      /* =====================================================
+         MILO FLOATING BUTTON
+         ===================================================== */
+
+      .milo-floating-button {
+        position: fixed;
+        right: 25px;
+        bottom: 25px;
+        width: 62px;
+        height: 62px;
+        border-radius: 50%;
+        border: 2px solid #00e5ff;
+        background: #081020;
+        color: #00e5ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        cursor: pointer;
+        z-index: 9999;
+        box-shadow:
+          0 0 12px rgba(0, 229, 255, 0.6),
+          0 0 28px rgba(0, 229, 255, 0.25);
+        transition: 0.3s ease;
+      }
+
+      .milo-floating-button:hover {
+        transform: scale(1.08);
+        box-shadow:
+          0 0 18px rgba(0, 229, 255, 0.9),
+          0 0 40px rgba(0, 229, 255, 0.4);
+      }
+
+      /* =====================================================
+         MILO CHAT WINDOW
+         ===================================================== */
+
+      .milo-chat {
+        position: fixed;
+        right: 25px;
+        bottom: 100px;
+        width: 360px;
+        max-width: calc(100vw - 30px);
+        background: #0c1428;
+        border: 1px solid #19364a;
+        border-radius: 16px;
+        overflow: hidden;
+        z-index: 9998;
+        box-shadow:
+          0 0 25px rgba(0, 229, 255, 0.2),
+          0 15px 45px rgba(0, 0, 0, 0.5);
+
+        display: none;
+        animation: miloOpen 0.25s ease;
+      }
+
+      .milo-chat.active {
+        display: block;
+      }
+
+      @keyframes miloOpen {
+        from {
+          opacity: 0;
+          transform: translateY(15px) scale(0.96);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      /* =====================================================
+         MILO HEADER
+         ===================================================== */
+
+      .milo-header {
+        background: #081020;
+        border-bottom: 1px solid #19364a;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .milo-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .milo-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #00e5ff;
+        color: #031018;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: bold;
+      }
+
+      .milo-name {
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: bold;
+      }
+
+      .milo-status {
+        color: #00ff9d;
+        font-size: 11px;
+        margin-top: 2px;
+      }
+
+      .milo-close {
+        border: none;
+        background: transparent;
+        color: #8794a8;
+        font-size: 22px;
+        cursor: pointer;
+      }
+
+      .milo-close:hover {
+        color: #ffffff;
+      }
+
+      /* =====================================================
+         MILO MESSAGES
+         ===================================================== */
+
+      .milo-messages {
+        height: 300px;
+        overflow-y: auto;
+        padding: 14px;
+        background: #07101f;
+      }
+
+      .milo-message {
+        max-width: 88%;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+        border-radius: 9px;
+        font-size: 13px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+
+      .milo-bot {
+        background: #111b31;
+        border-left: 3px solid #00e5ff;
+        color: #d8dfeb;
+      }
+
+      .milo-user {
+        background: #0b2633;
+        border-right: 3px solid #00ff9d;
+        color: #ffffff;
+        margin-left: auto;
+      }
+
+      .milo-loading {
+        display: none;
+        color: #00e5ff;
+        font-size: 12px;
+        padding: 0 14px 8px;
+      }
+
+      /* =====================================================
+         MILO INPUT
+         ===================================================== */
+
+      .milo-input-area {
+        padding: 12px;
+        background: #081020;
+        border-top: 1px solid #19364a;
+        display: flex;
+        gap: 8px;
+      }
+
+      .milo-input {
+        flex: 1;
+        min-width: 0;
+        padding: 11px;
+        border-radius: 8px;
+        border: 1px solid #19364a;
+        background: #07101f;
+        color: #ffffff;
+        outline: none;
+      }
+
+      .milo-input:focus {
+        border-color: #00e5ff;
+      }
+
+      .milo-input::placeholder {
+        color: #66758c;
+      }
+
+      .milo-send {
+        border: none;
+        border-radius: 8px;
+        padding: 0 14px;
+        background: #00e5ff;
+        color: #031018;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .milo-send:hover {
+        opacity: 0.85;
+      }
+
+      .milo-send:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* =====================================================
+         JOB / INTERNSHIP SELECTION
+         ===================================================== */
+
+      .opportunity-selection {
+        margin: 18px 0;
+      }
+
+      .opportunity-title {
+        display: block;
+        margin-bottom: 10px;
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      .opportunity-options {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .opportunity-option {
+        position: relative;
+        flex: 1;
+        min-width: 130px;
+      }
+
+      .opportunity-option input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .opportunity-card {
+        display: block;
+        padding: 13px 16px;
+        text-align: center;
+        border: 1px solid #19364a;
+        border-radius: 10px;
+        background: #07101f;
+        color: #b9c5d6;
+        cursor: pointer;
+        transition: 0.25s ease;
+      }
+
+      .opportunity-card:hover {
+        border-color: #00e5ff;
+        color: #ffffff;
+        transform: translateY(-2px);
+      }
+
+      .opportunity-option input:checked + .opportunity-card {
+        border-color: #00e5ff;
+        background: rgba(0, 229, 255, 0.1);
+        color: #00e5ff;
+        box-shadow: 0 0 14px rgba(0, 229, 255, 0.18);
+      }
+
+      /* =====================================================
+         MOBILE
+         ===================================================== */
+
+      @media (max-width: 600px) {
+        .milo-floating-button {
+          right: 16px;
+          bottom: 16px;
+          width: 56px;
+          height: 56px;
+          font-size: 25px;
+        }
+
+        .milo-chat {
+          right: 12px;
+          bottom: 85px;
+          width: calc(100vw - 24px);
+        }
+
+        .milo-messages {
+          height: 280px;
+        }
+
+        .opportunity-options {
+          flex-direction: column;
+        }
+
+        .opportunity-option {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- =====================================================
+         EXISTING UPLOAD PAGE
+         ===================================================== -->
+
+    <main class="main-container">
+      <div class="logo-section">
+        <img
+          src="{{ url_for('static', filename='images/logo.png') }}"
+          alt="AI Resume Scanner"
+          class="logo"
+        />
+      </div>
+
+      <section class="upload-container">
+        <div class="left-section">
+          <img
+            src="{{ url_for('static', filename='images/upload-resume.png') }}"
+            alt="Upload Resume"
+            class="upload-image"
+          />
+        </div>
+
+        <div class="right-section">
+          <h1>Analyze Your Resume</h1>
+
+          <p class="upload-text">
+            Upload your resume and let the AI system analyze your skills,
+            experience and career profile.
+          </p>
+
+          <form
+            action="/predict"
+            method="POST"
+            enctype="multipart/form-data"
+            id="resumeForm"
+          >
+            <!-- =================================================
+                 JOB / INTERNSHIP SELECTION
+                 ================================================= -->
+
+            <div class="opportunity-selection">
+              <span class="opportunity-title"> What are you looking for? </span>
+
+              <div class="opportunity-options">
+                <label class="opportunity-option">
+                  <input
+                    type="radio"
+                    name="opportunity_type"
+                    value="job"
+                    checked
+                  />
+
+                  <span class="opportunity-card"> 💼 Job </span>
+                </label>
+
+                <label class="opportunity-option">
+                  <input
+                    type="radio"
+                    name="opportunity_type"
+                    value="internship"
+                  />
+
+                  <span class="opportunity-card"> 🎓 Internship </span>
+                </label>
+              </div>
+            </div>
+
+            <label for="resume"> Upload your resume </label>
+
+            <input
+              type="file"
+              id="resume"
+              name="resume"
+              accept=".pdf"
+              required
+            />
+
+            <button type="submit" class="upload-btn" id="analyzeButton">
+              Analyze Resume
+            </button>
+          </form>
+
+          <div class="processing-panel" id="processingPanel">
+            <div class="processing-title">
+              AI is analyzing your resume
+
+              <span class="processing-dots"></span>
+            </div>
+
+            <div class="processing-bar">
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- =====================================================
+         MILO FLOATING BUTTON
+         ===================================================== -->
+
+    <button
+      type="button"
+      class="milo-floating-button"
+      id="miloFloatingButton"
+      title="Chat with Milo"
+      aria-label="Open Milo"
+    >
+      🤖
+    </button>
+
+    <!-- =====================================================
+         MILO CHAT WINDOW
+         ===================================================== -->
+
+    <div class="milo-chat" id="miloChat">
+      <div class="milo-header">
+        <div class="milo-header-left">
+          <div class="milo-icon">🤖</div>
+
+          <div>
+            <div class="milo-name">Milo</div>
+
+            <div class="milo-status">● Job Assistant</div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="milo-close"
+          id="miloClose"
+          aria-label="Close Milo"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="milo-messages" id="miloMessages">
+        <div class="milo-message milo-bot">
+          Hi! I'm Milo 🤖 I can help with jobs, internships, companies, skills,
+          applications, salaries, hiring, career roles and resume-related
+          questions. What would you like to know?
+        </div>
+      </div>
+
+      <div class="milo-loading" id="miloLoading">Milo is thinking...</div>
+
+      <div class="milo-input-area">
+        <input
+          type="text"
+          id="miloInput"
+          class="milo-input"
+          placeholder="Ask Milo about jobs..."
+          autocomplete="off"
+        />
+
+        <button type="button" class="milo-send" id="miloSend">Send</button>
+      </div>
+    </div>
+
+    <!-- =====================================================
+         EXISTING RESUME PROCESSING JAVASCRIPT
+         ===================================================== -->
+
+    <script>
+      const resumeForm = document.getElementById("resumeForm");
+
+      const processingPanel = document.getElementById("processingPanel");
+
+      const analyzeButton = document.getElementById("analyzeButton");
+
+      resumeForm.addEventListener("submit", function () {
+        processingPanel.classList.add("active");
+
+        analyzeButton.disabled = true;
+
+        analyzeButton.textContent = "Analyzing...";
+      });
+    </script>
+
+    <!-- =====================================================
+         MILO JAVASCRIPT
+         ===================================================== -->
+
+    <script>
+      const miloFloatingButton = document.getElementById("miloFloatingButton");
+
+      const miloChat = document.getElementById("miloChat");
+
+      const miloClose = document.getElementById("miloClose");
+
+      const miloInput = document.getElementById("miloInput");
+
+      const miloSend = document.getElementById("miloSend");
+
+      const miloMessages = document.getElementById("miloMessages");
+
+      const miloLoading = document.getElementById("miloLoading");
+
+      /* =====================================================
+         OPEN MILO
+         ===================================================== */
+
+      miloFloatingButton.addEventListener("click", function () {
+        miloChat.classList.toggle("active");
+
+        if (miloChat.classList.contains("active")) {
+          setTimeout(function () {
+            miloInput.focus();
+          }, 150);
+        }
+      });
+
+      /* =====================================================
+         CLOSE MILO
+         ===================================================== */
+
+      miloClose.addEventListener("click", function () {
+        miloChat.classList.remove("active");
+      });
+
+      /* =====================================================
+         ADD MESSAGE
+         ===================================================== */
+
+      function addMiloMessage(text, type) {
+        const message = document.createElement("div");
+
+        message.className = "milo-message " + type;
+
+        message.textContent = text;
+
+        miloMessages.appendChild(message);
+
+        miloMessages.scrollTop = miloMessages.scrollHeight;
+      }
+
+      /* =====================================================
+         SEND MESSAGE
+         ===================================================== */
+
+      async function sendMiloMessage() {
+        const message = miloInput.value.trim();
+
+        if (!message) {
+          return;
+        }
+
+        /* USER MESSAGE */
+
+        addMiloMessage(message, "milo-user");
+
+        miloInput.value = "";
+
+        miloLoading.style.display = "block";
+
+        miloSend.disabled = true;
+
+        /* SEND TO EXISTING MILO API */
+
+        const formData = new FormData();
+
+        formData.append("message", message);
+
+        formData.append("recommendations_data", JSON.stringify([]));
+
+        formData.append("prediction_data", JSON.stringify({}));
+
+        formData.append("ats_score", "");
+
+        formData.append("skills_data", JSON.stringify([]));
+
+        try {
+          const response = await fetch("{{ url_for('milo') }}", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            addMiloMessage(data.response, "milo-bot");
+          } else {
+            addMiloMessage(
+              data.response || "Milo could not process your question.",
+              "milo-bot",
+            );
+          }
+        } catch (error) {
+          console.error("Milo error:", error);
+
+          addMiloMessage(
+            "Milo could not connect to the assistant service. Please try again.",
+            "milo-bot",
+          );
+        }
+
+        miloLoading.style.display = "none";
+
+        miloSend.disabled = false;
+
+        miloInput.focus();
+      }
+
+      /* =====================================================
+         SEND BUTTON
+         ===================================================== */
+
+      miloSend.addEventListener("click", sendMiloMessage);
+
+      /* =====================================================
+         ENTER KEY
+         ===================================================== */
+
+      miloInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+
+          sendMiloMessage();
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+<button
+    id="milo-float-button"
+    type="button"
+    aria-label="Open Milo"
+    onclick="toggleMilo()"
+>
+    🤖
+</button>
+
+
+<div id="milo-chat-window">
+
+    <div class="milo-header">
+
+        <div class="milo-header-left">
+
+            <div class="milo-avatar">
+                🤖
+            </div>
+
+            <div>
+
+                <div class="milo-name">
+                    Milo
+                </div>
+
+                <div class="milo-status">
+                    ● Job & Internship Assistant
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="milo-close"
+            type="button"
+            onclick="toggleMilo()"
+            aria-label="Close Milo"
+        >
+            ×
+        </button>
+
+    </div>
+
+
+    <div
+        id="miloChatMessages"
+        class="milo-chat-messages"
+    >
+
+        <div class="milo-chat-message milo-chat-bot">
+
+            Hi! I'm Milo 🤖
+
+            Ask me about jobs, internships,
+            companies, hiring, applications,
+            salary, skills, or your resume match.
+
+        </div>
+
+    </div>
+
+
+    <div
+        id="miloTyping"
+        class="milo-typing"
+    >
+        Milo is checking your resume analysis...
+    </div>
+
+
+    <div class="milo-input-area">
+
+        <input
+            id="miloChatInput"
+            class="milo-input"
+            type="text"
+            placeholder="Ask about a job or internship..."
+            autocomplete="off"
+        >
+
+        <button
+            class="milo-send"
+            type="button"
+            onclick="sendFloatingMiloMessage()"
+        >
+            ➤
+        </button>
+
+    </div>
+
+</div>
