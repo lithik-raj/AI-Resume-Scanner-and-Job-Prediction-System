@@ -1,12 +1,7 @@
 Flask
 pandas
-numpy
 scikit-learn
 nltk
-pymysql
 pdfplumber
-joblib
 requests
 python-dotenv
-google-generativeai
-git commit -m "Reduce deployment dependencies"
