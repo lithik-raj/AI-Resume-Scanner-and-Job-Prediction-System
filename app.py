@@ -4,6 +4,7 @@ warnings.filterwarnings("ignore")
 
 import os
 import json
+import tempfile
 import joblib
 
 from flask import Flask, render_template, request
@@ -17,41 +18,45 @@ from utils.url_extractor import extract_urls
 from utils.github_analyzer import analyze_github
 from utils.portfolio_analyzer import analyze_portfolio
 
-# Milo chatbot
 from chatbot import generate_milo_response
 
-
-# =========================================================
-# FLASK APP
-# =========================================================
 
 app = Flask(__name__)
 
 
 # =========================================================
-# UPLOAD CONFIGURATION
+# VERCEL-SAFE UPLOAD CONFIGURATION
 # =========================================================
 
-UPLOAD_FOLDER = "uploads"
+# Vercel's deployed filesystem is read-only.
+# /tmp is the writable temporary directory.
+UPLOAD_FOLDER = tempfile.gettempdir()
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-os.makedirs(
-    UPLOAD_FOLDER,
-    exist_ok=True
-)
 
 
 # =========================================================
 # LOAD ML MODEL
 # =========================================================
 
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)
+
 model = joblib.load(
-    "models/resume_classifier.pkl"
+    os.path.join(
+        BASE_DIR,
+        "models",
+        "resume_classifier.pkl"
+    )
 )
 
 vectorizer = joblib.load(
-    "models/vectorizer.pkl"
+    os.path.join(
+        BASE_DIR,
+        "models",
+        "vectorizer.pkl"
+    )
 )
 
 
@@ -89,10 +94,6 @@ def upload():
 )
 def predict():
 
-    # =====================================================
-    # CHECK RESUME
-    # =====================================================
-
     if "resume" not in request.files:
 
         return "No file uploaded."
@@ -103,16 +104,11 @@ def predict():
 
         return "No file selected."
 
-    # =====================================================
-    # GET OPPORTUNITY TYPE
-    # =====================================================
-
     opportunity_type = request.form.get(
         "opportunity_type",
         "job"
     ).strip().lower()
 
-    # Safety check
     if opportunity_type not in [
         "job",
         "internship"
@@ -120,33 +116,72 @@ def predict():
 
         opportunity_type = "job"
 
+
     # =====================================================
-    # SAVE RESUME
+    # SAVE RESUME TO TEMPORARY VERCEL STORAGE
     # =====================================================
 
-    filepath = os.path.join(
-        app.config["UPLOAD_FOLDER"],
+    safe_filename = os.path.basename(
         file.filename
     )
 
-    file.save(
-        filepath
+    filepath = os.path.join(
+        app.config["UPLOAD_FOLDER"],
+        safe_filename
     )
+
+    try:
+
+        file.save(
+            filepath
+        )
+
+    except Exception as error:
+
+        print(
+            "Resume save error:",
+            error
+        )
+
+        return (
+            "Unable to temporarily save the uploaded "
+            "resume. Please try again."
+        )
+
 
     # =====================================================
     # EXTRACT RESUME TEXT
     # =====================================================
 
-    text = extract_text(
-        filepath
-    )
+    try:
+
+        text = extract_text(
+            filepath
+        )
+
+    except Exception as error:
+
+        print(
+            "Resume parser error:",
+            error
+        )
+
+        text = ""
+
 
     if not text or not text.strip():
+
+        try:
+            if os.path.exists(filepath):
+                os.remove(filepath)
+        except Exception:
+            pass
 
         return (
             "Unable to extract readable text "
             "from this resume."
         )
+
 
     # =====================================================
     # EXTRACT SKILLS
@@ -155,6 +190,7 @@ def predict():
     skills = extract_skills(
         text
     )
+
 
     # =====================================================
     # ATS ANALYSIS
@@ -170,6 +206,7 @@ def predict():
         0
     )
 
+
     # =====================================================
     # ML ROLE PREDICTION
     # =====================================================
@@ -181,6 +218,7 @@ def predict():
     ml_prediction = model.predict(
         text_vector
     )[0]
+
 
     # =====================================================
     # URL EXTRACTION
@@ -201,6 +239,7 @@ def predict():
         for item in detected_urls
         if item.get("type") == "portfolio"
     ]
+
 
     # =====================================================
     # GITHUB ANALYSIS
@@ -224,6 +263,7 @@ def predict():
             )
 
             github_evidence = None
+
 
     # =====================================================
     # PORTFOLIO ANALYSIS
@@ -250,6 +290,7 @@ def predict():
                 error
             )
 
+
     # =====================================================
     # EXTERNAL EVIDENCE
     # =====================================================
@@ -261,6 +302,7 @@ def predict():
         "portfolio": portfolio_evidence
 
     }
+
 
     # =====================================================
     # FINAL ROLE PREDICTION
@@ -304,18 +346,9 @@ def predict():
         ml_prediction
     )
 
+
     # =====================================================
-    # LIVE ADZUNA SEARCH
-    # =====================================================
-    #
-    # IMPORTANT:
-    #
-    # Only the opportunity selected by the user
-    # is searched.
-    #
-    # job         -> live jobs
-    # internship  -> live internships
-    #
+    # LIVE OPPORTUNITY SEARCH
     # =====================================================
 
     print(
@@ -345,6 +378,7 @@ def predict():
         "========================================\n"
     )
 
+
     try:
 
         recommendations = recommend_jobs(
@@ -360,10 +394,6 @@ def predict():
         )
 
     except TypeError:
-
-        # Compatibility fallback in case the
-        # recommendation.py currently doesn't
-        # accept skills.
 
         recommendations = recommend_jobs(
 
@@ -384,9 +414,6 @@ def predict():
 
         recommendations = []
 
-    # =====================================================
-    # ENSURE LIST
-    # =====================================================
 
     if not isinstance(
         recommendations,
@@ -395,8 +422,9 @@ def predict():
 
         recommendations = []
 
+
     # =====================================================
-    # REMOVE INVALID RESULTS
+    # VALIDATE RECOMMENDATIONS
     # =====================================================
 
     valid_recommendations = []
@@ -438,6 +466,7 @@ def predict():
             job
         )
 
+
     # =====================================================
     # REMOVE DUPLICATES
     # =====================================================
@@ -470,13 +499,9 @@ def predict():
         ).strip().lower()
 
         unique_key = (
-
             title,
-
             company,
-
             location
-
         )
 
         if unique_key in seen_jobs:
@@ -490,6 +515,7 @@ def predict():
         unique_recommendations.append(
             job
         )
+
 
     # =====================================================
     # SORT BY RESUME MATCH
@@ -515,24 +541,20 @@ def predict():
 
             return 0
 
+
     unique_recommendations.sort(
-
         key=get_match_score,
-
         reverse=True
-
     )
 
-    # =====================================================
-    # TOP LIVE RESULTS
-    # =====================================================
 
     recommendations = (
         unique_recommendations[:30]
     )
 
+
     # =====================================================
-    # SEPARATE DISPLAY DATA
+    # SEPARATE JOBS / INTERNSHIPS
     # =====================================================
 
     if opportunity_type == "internship":
@@ -546,6 +568,7 @@ def predict():
         job_recommendations = recommendations
 
         internships = []
+
 
     # =====================================================
     # DEBUG INFORMATION
@@ -585,6 +608,27 @@ def predict():
         "========================================\n"
     )
 
+
+    # =====================================================
+    # CLEAN TEMPORARY RESUME
+    # =====================================================
+
+    try:
+
+        if os.path.exists(filepath):
+
+            os.remove(
+                filepath
+            )
+
+    except Exception as error:
+
+        print(
+            "Temporary file cleanup error:",
+            error
+        )
+
+
     # =====================================================
     # RESULT PAGE
     # =====================================================
@@ -593,39 +637,19 @@ def predict():
 
         "result.html",
 
-        # ---------------------------------------------
-        # ATS
-        # ---------------------------------------------
-
         ats_score=ats_score,
 
         ats_details=ats_details,
 
-        # ---------------------------------------------
-        # RESUME SKILLS
-        # ---------------------------------------------
-
         skills=skills,
-
-        # ---------------------------------------------
-        # PREDICTION
-        # ---------------------------------------------
 
         prediction=prediction,
 
         prediction_result=prediction_result,
 
-        # ---------------------------------------------
-        # SELECTED OPPORTUNITY TYPE
-        # ---------------------------------------------
-
         opportunity_type=opportunity_type,
 
         selected_opportunity=opportunity_type,
-
-        # ---------------------------------------------
-        # LIVE RECOMMENDATIONS
-        # ---------------------------------------------
 
         recommendations=recommendations,
 
@@ -636,10 +660,6 @@ def predict():
         live_jobs=job_recommendations,
 
         live_internships=internships,
-
-        # ---------------------------------------------
-        # URL DATA
-        # ---------------------------------------------
 
         detected_urls=detected_urls,
 
@@ -666,10 +686,6 @@ def predict():
 )
 def milo():
 
-    # =====================================================
-    # USER MESSAGE
-    # =====================================================
-
     message = request.form.get(
         "message",
         ""
@@ -682,19 +698,14 @@ def milo():
             "success": False,
 
             "response": (
-
                 "Please ask me about jobs, "
                 "internships, companies, skills, "
                 "your resume, salary, hiring, "
                 "or applications."
-
             )
 
         }
 
-    # =====================================================
-    # RECEIVE DATA FROM RESULT PAGE
-    # =====================================================
 
     recommendations_data = request.form.get(
         "recommendations_data",
@@ -721,22 +732,15 @@ def milo():
         "job"
     )
 
-    # =====================================================
-    # PARSE RECOMMENDATIONS
-    # =====================================================
 
     try:
 
         recommendations = (
-
             json.loads(
                 recommendations_data
             )
-
             if recommendations_data
-
             else []
-
         )
 
     except (
@@ -746,22 +750,15 @@ def milo():
 
         recommendations = []
 
-    # =====================================================
-    # PARSE PREDICTION
-    # =====================================================
 
     try:
 
         prediction_result = (
-
             json.loads(
                 prediction_data
             )
-
             if prediction_data
-
             else {}
-
         )
 
     except (
@@ -771,22 +768,15 @@ def milo():
 
         prediction_result = {}
 
-    # =====================================================
-    # PARSE SKILLS
-    # =====================================================
 
     try:
 
         skills = (
-
             json.loads(
                 skills_data
             )
-
             if skills_data
-
             else []
-
         )
 
     except (
@@ -796,22 +786,15 @@ def milo():
 
         skills = []
 
-    # =====================================================
-    # PARSE ATS
-    # =====================================================
 
     try:
 
         ats_score = (
-
             float(
                 ats_score_data
             )
-
             if ats_score_data
-
             else None
-
         )
 
     except (
@@ -821,9 +804,6 @@ def milo():
 
         ats_score = None
 
-    # =====================================================
-    # NORMALIZE OPPORTUNITY TYPE
-    # =====================================================
 
     if opportunity_type not in [
         "job",
@@ -832,9 +812,6 @@ def milo():
 
         opportunity_type = "job"
 
-    # =====================================================
-    # GENERATE MILO RESPONSE
-    # =====================================================
 
     try:
 
@@ -860,17 +837,12 @@ def milo():
         )
 
         response = (
-
             "I couldn't process that question "
             "right now. Please ask me about jobs, "
             "internships, companies, skills, "
             "resume matching, salary, or applications."
-
         )
 
-    # =====================================================
-    # RETURN RESPONSE
-    # =====================================================
 
     return {
 
