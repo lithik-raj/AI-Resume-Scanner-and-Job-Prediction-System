@@ -359,19 +359,12 @@ The project already uses environment variables for API credentials.
 
 ## ▶️ Run the Application
 
-Start the Flask application:
+Vercel : ## 🚀 Live Demo
 
-```bash
-python app.py
-```
+🔗 **Live Application:** https://ai-resume-scanner-and-job-prediction-system-3xmzp9tjo.vercel.app
 
-Then open:
+The AI Resume Scanner and Job Prediction System is deployed on Vercel and available online for testing.
 
-```text
-http://127.0.0.1:5000
-```
-
----
 
 ## 🔄 Application Workflow
 
